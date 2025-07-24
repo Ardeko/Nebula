@@ -101,6 +101,9 @@ export class GameScene extends Phaser.Scene {
     // Create cosmic background
     this.createBackground();
     
+    // Setup physics groups first
+    this.setupPhysics();
+    
     // Initialize bubble grid
     this.bubbleGrid = new BubbleGrid(this, this.currentLevel);
     
@@ -112,9 +115,6 @@ export class GameScene extends Phaser.Scene {
     
     // Setup input
     this.setupInput();
-    
-    // Setup physics groups
-    this.setupPhysics();
   }
 
   createBackground() {
