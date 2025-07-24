@@ -6,12 +6,12 @@ import os
 import logging
 from typing import List, Optional
 
-from .models import (
+from models import (
     PlayerProgress, InfiniteScore, PlayerAchievements, Level,
     LevelCompleteRequest, InfiniteScoreRequest, ProgressUpdateRequest
 )
-from .database import database
-from .achievements import check_level_achievements, check_infinite_achievements, get_or_create_achievements
+from database import database
+from achievements import check_level_achievements, check_infinite_achievements, get_or_create_achievements
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
