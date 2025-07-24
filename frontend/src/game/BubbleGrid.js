@@ -21,6 +21,11 @@ export class BubbleGrid {
   }
 
   generateLevel(level) {
+    if (level === 0) {
+      // Infinite mode - don't generate initial pattern
+      return;
+    }
+
     const patterns = {
       1: [
         ['fire', 'water', 'fire', 'water', 'fire', 'water', 'fire', 'water', 'fire', 'water'],
