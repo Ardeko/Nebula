@@ -8,15 +8,18 @@ import { mockAPI } from '../data/mockData';
 const GameUI = ({ 
   gameState, 
   onStartGame, 
+  onStartInfiniteMode,
   onLevelSelect, 
   onShowSettings, 
   onShowAchievements 
 }) => {
   const [playerProgress, setPlayerProgress] = useState(null);
+  const [infiniteStats, setInfiniteStats] = useState({ highScore: 0, highWave: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPlayerProgress();
+    loadInfiniteStats();
   }, []);
 
   const loadPlayerProgress = async () => {
@@ -28,6 +31,12 @@ const GameUI = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadInfiniteStats = () => {
+    const highScore = parseInt(localStorage.getItem('nebula-infinite-high-score') || '0');
+    const highWave = parseInt(localStorage.getItem('nebula-infinite-high-wave') || '0');
+    setInfiniteStats({ highScore, highWave });
   };
 
   const handleLevelComplete = async (levelData) => {
@@ -127,6 +136,14 @@ const GameUI = ({
           </Button>
 
           <Button
+            onClick={onStartInfiniteMode}
+            size="lg"
+            className="h-16 text-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200"
+          >
+            ∞ INFINITE COSMOS
+          </Button>
+
+          <Button
             onClick={onLevelSelect}
             variant="outline"
             size="lg"
@@ -154,8 +171,33 @@ const GameUI = ({
           </Button>
         </div>
 
+        {/* Infinite Mode Stats */}
+        {(infiniteStats.highScore > 0 || infiniteStats.highWave > 0) && (
+          <Card className="mt-6 bg-black/30 backdrop-blur-sm border-pink-500/30">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white">Infinite Cosmos Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-pink-400">
+                    {infiniteStats.highScore.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-300">High Score</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-cyan-400">
+                    {infiniteStats.highWave}
+                  </div>
+                  <div className="text-sm text-gray-300">Best Wave</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Level Progress Preview */}
-        <Card className="mt-8 bg-black/30 backdrop-blur-sm border-purple-500/30">
+        <Card className="mt-6 bg-black/30 backdrop-blur-sm border-purple-500/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-white">Recent Conquests</CardTitle>
           </CardHeader>
