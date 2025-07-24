@@ -64,16 +64,15 @@ export const mockPlayerProgress = {
   currentLevel: 1,
   totalScore: 0,
   totalStars: 0,
-  levels: [
-    { id: 1, unlocked: true, completed: false, stars: 0, bestScore: 0 },
-    { id: 2, unlocked: false, completed: false, stars: 0, bestScore: 0 },
-    { id: 3, unlocked: false, completed: false, stars: 0, bestScore: 0 },
-    { id: 4, unlocked: false, completed: false, stars: 0, bestScore: 0 },
-    { id: 5, unlocked: false, completed: false, stars: 0, bestScore: 0 },
-    { id: 6, unlocked: false, completed: false, stars: 0, bestScore: 0 },
-    { id: 7, unlocked: false, completed: false, stars: 0, bestScore: 0 },
-    { id: 8, unlocked: false, completed: false, stars: 0, bestScore: 0 }
-  ]
+  infiniteHighScore: 0,
+  infiniteHighWave: 0,
+  levels: Array.from({ length: 50 }, (_, i) => ({
+    id: i + 1,
+    unlocked: i < 3, // First 3 levels unlocked
+    completed: false,
+    stars: 0,
+    bestScore: 0
+  }))
 };
 
 export const mockPowerUps = {
