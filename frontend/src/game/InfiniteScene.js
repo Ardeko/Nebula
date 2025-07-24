@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { BubbleGrid } from './BubbleGrid';
 import { Shooter } from './Shooter';
+import { gameAPI } from '../services/api';
 
 export class InfiniteScene extends Phaser.Scene {
   constructor() {
@@ -216,7 +217,7 @@ export class InfiniteScene extends Phaser.Scene {
     });
 
     // High score display
-    const highScore = parseInt(localStorage.getItem('nebula-infinite-high-score') || '0');
+    const highScore = gameAPI.getLocalInfiniteHighScore();
     this.add.text(this.gameWidth - 20, 30, `Best: ${highScore.toLocaleString()}`, {
       fontSize: '16px',
       fontFamily: 'Arial',
@@ -475,23 +476,26 @@ export class InfiniteScene extends Phaser.Scene {
       this.dropTimer.destroy();
     }
     
-    // Save high score
-    const currentHighScore = parseInt(localStorage.getItem('nebula-infinite-high-score') || '0');
-    const currentHighWave = parseInt(localStorage.getItem('nebula-infinite-high-wave') || '0');
+    // Save high score locally and check against previous
+    const currentHighScore = gameAPI.getLocalInfiniteHighScore();
+    const currentHighWave = gameAPI.getLocalInfiniteHighWave();
     
-    if (this.score > currentHighScore) {
-      localStorage.setItem('nebula-infinite-high-score', this.score.toString());
+    const isNewHighScore = this.score > currentHighScore;
+    const isNewHighWave = this.wave > currentHighWave;
+    
+    if (isNewHighScore) {
+      gameAPI.setLocalInfiniteHighScore(this.score);
     }
     
-    if (this.wave > currentHighWave) {
-      localStorage.setItem('nebula-infinite-high-wave', this.wave.toString());
+    if (isNewHighWave) {
+      gameAPI.setLocalInfiniteHighWave(this.wave);
     }
     
     this.game.events.emit('infinite-game-over', {
       score: this.score,
       wave: this.wave,
-      isNewHighScore: this.score > currentHighScore,
-      isNewHighWave: this.wave > currentHighWave
+      isNewHighScore,
+      isNewHighWave
     });
   }
 }
