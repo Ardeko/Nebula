@@ -4,14 +4,17 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import NebulaGame from "./components/NebulaGame";
 import GameUI from "./components/GameUI";
 import ScrollableLevelSelect from "./components/ScrollableLevelSelect";
+import AchievementsView from "./components/AchievementsView";
 import { Toaster } from "./components/ui/toaster";
 import { useToast } from "./hooks/use-toast";
+import { useGameData } from "./hooks/useGameData";
 
 function App() {
-  const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'infinite', 'levelSelect', 'settings', 'achievements'
+  const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'infinite', 'levelSelect', 'achievements', 'settings'
   const [currentLevel, setCurrentLevel] = useState(1);
   const [gameMode, setGameMode] = useState('levels'); // 'levels' or 'infinite'
   const { toast } = useToast();
+  const { completeLevel, saveInfiniteScore, checkNewAchievements } = useGameData();
 
   const handleStartGame = (level = 1) => {
     setCurrentLevel(level);
@@ -24,23 +27,55 @@ function App() {
     setGameState('infinite');
   };
 
-  const handleLevelComplete = (levelData) => {
-    toast({
-      title: "Level Complete! 🎉",
-      description: `You earned ${levelData.stars} stars and scored ${levelData.score} points!`,
-      duration: 5000,
-    });
-    
-    // Return to level select after showing completion
-    setTimeout(() => {
-      setGameState('levelSelect');
-    }, 2000);
+  const handleLevelComplete = async (levelData) => {
+    try {
+      const previousAchievements = await completeLevel(
+        levelData.level, 
+        levelData.score, 
+        levelData.stars, 
+        50 - (levelData.shots || 0) // Calculate shots used
+      );
+      
+      toast({
+        title: "Level Complete! 🎉",
+        description: `You earned ${levelData.stars} stars and scored ${levelData.score.toLocaleString()} points!`,
+        duration: 5000,
+      });
+      
+      // Check for new achievements
+      const newAchievements = checkNewAchievements(previousAchievements);
+      if (newAchievements.length > 0) {
+        setTimeout(() => {
+          newAchievements.forEach(achievement => {
+            toast({
+              title: "Achievement Unlocked! 🏆",
+              description: `${achievement.icon} ${achievement.name}: ${achievement.description}`,
+              duration: 6000,
+            });
+          });
+        }, 2000);
+      }
+      
+      // Return to level select after showing completion
+      setTimeout(() => {
+        setGameState('levelSelect');
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Failed to complete level:', error);
+      toast({
+        title: "Save Error",
+        description: "Failed to save progress, but you can continue playing!",
+        variant: "destructive",
+        duration: 4000,
+      });
+    }
   };
 
   const handleGameOver = (gameData) => {
     toast({
       title: "Game Over 💫",
-      description: `Better luck next time! Final score: ${gameData.score}`,
+      description: `Better luck next time! Final score: ${gameData.score.toLocaleString()}`,
       variant: "destructive",
       duration: 4000,
     });
@@ -51,26 +86,38 @@ function App() {
     }, 2000);
   };
 
-  const handleInfiniteGameOver = (gameData) => {
-    const messages = [];
-    
-    if (gameData.isNewHighScore) {
-      messages.push(`New High Score: ${gameData.score.toLocaleString()}! 🏆`);
-    } else {
-      messages.push(`Final Score: ${gameData.score.toLocaleString()}`);
-    }
-    
-    if (gameData.isNewHighWave) {
-      messages.push(`New Best Wave: ${gameData.wave}! 🌊`);
-    } else {
-      messages.push(`Reached Wave: ${gameData.wave}`);
-    }
+  const handleInfiniteGameOver = async (gameData) => {
+    try {
+      await saveInfiniteScore(gameData.score, gameData.wave);
+      
+      const messages = [];
+      
+      if (gameData.isNewHighScore) {
+        messages.push(`New High Score: ${gameData.score.toLocaleString()}! 🏆`);
+      } else {
+        messages.push(`Final Score: ${gameData.score.toLocaleString()}`);
+      }
+      
+      if (gameData.isNewHighWave) {
+        messages.push(`New Best Wave: ${gameData.wave}! 🌊`);
+      } else {
+        messages.push(`Reached Wave: ${gameData.wave}`);
+      }
 
-    toast({
-      title: "Infinite Mode Complete! 🌌",
-      description: messages.join(' • '),
-      duration: 6000,
-    });
+      toast({
+        title: "Infinite Mode Complete! 🌌",
+        description: messages.join(' • '),
+        duration: 6000,
+      });
+      
+    } catch (error) {
+      console.error('Failed to save infinite score:', error);
+      toast({
+        title: "Game Complete! 🌌",
+        description: `Score: ${gameData.score.toLocaleString()} • Wave: ${gameData.wave}`,
+        duration: 6000,
+      });
+    }
     
     // Return to menu after infinite mode ends
     setTimeout(() => {
@@ -101,14 +148,14 @@ function App() {
       title: "Coming Soon! 🔧",
       description: "Settings panel will be available in the next update.",
     });
+    // For now, just show the toast and stay on menu
+    setTimeout(() => {
+      setGameState('menu');
+    }, 2000);
   };
 
   const handleShowAchievements = () => {
     setGameState('achievements');
-    toast({
-      title: "Coming Soon! 🏆",
-      description: "Achievement system will be available in the next update.",
-    });
   };
 
   return (
@@ -152,6 +199,12 @@ function App() {
                 <ScrollableLevelSelect
                   onBackToMenu={handleBackToMenu}
                   onSelectLevel={handleSelectLevel}
+                />
+              )}
+              
+              {gameState === 'achievements' && (
+                <AchievementsView
+                  onBackToMenu={handleBackToMenu}
                 />
               )}
               

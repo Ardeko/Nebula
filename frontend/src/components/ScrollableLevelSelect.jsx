@@ -2,27 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
-import { ScrollArea } from './ui/scroll-area';
-import { mockLevels, mockAPI } from '../data/mockData';
+import { useGameData } from '../hooks/useGameData';
 
 const ScrollableLevelSelect = ({ onBackToMenu, onSelectLevel }) => {
-  const [playerProgress, setPlayerProgress] = useState(null);
+  const { playerProgress, levels, loading } = useGameData();
   const [currentPage, setCurrentPage] = useState(0);
   const levelsPerPage = 12;
-  const totalPages = Math.ceil(mockLevels.length / levelsPerPage);
-
-  useEffect(() => {
-    loadPlayerProgress();
-  }, []);
-
-  const loadPlayerProgress = async () => {
-    try {
-      const progress = await mockAPI.getPlayerProgress();
-      setPlayerProgress(progress);
-    } catch (error) {
-      console.error('Failed to load player progress:', error);
-    }
-  };
+  const totalPages = Math.ceil(levels.length / levelsPerPage);
 
   const getDifficultyColor = (difficulty) => {
     const colors = {
@@ -35,27 +21,27 @@ const ScrollableLevelSelect = ({ onBackToMenu, onSelectLevel }) => {
     return colors[difficulty] || 'bg-gray-500';
   };
 
-  const getDifficultyTextColor = (difficulty) => {
-    const colors = {
-      'Easy': 'text-green-300',
-      'Medium': 'text-yellow-300',
-      'Hard': 'text-orange-300',
-      'Expert': 'text-red-300',
-      'Legendary': 'text-purple-300'
-    };
-    return colors[difficulty] || 'text-gray-300';
-  };
-
   const getCurrentPageLevels = () => {
     const startIndex = currentPage * levelsPerPage;
     const endIndex = startIndex + levelsPerPage;
-    return mockLevels.slice(startIndex, endIndex);
+    return levels.slice(startIndex, endIndex);
   };
 
-  if (!playerProgress) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-black">
         <div className="text-white text-xl">Loading levels...</div>
+      </div>
+    );
+  }
+
+  if (!playerProgress || levels.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-black">
+        <div className="text-center text-white">
+          <div className="text-xl mb-4">Unable to load levels</div>
+          <Button onClick={onBackToMenu}>Back to Menu</Button>
+        </div>
       </div>
     );
   }
@@ -100,7 +86,7 @@ const ScrollableLevelSelect = ({ onBackToMenu, onSelectLevel }) => {
             Page {currentPage + 1} of {totalPages}
           </div>
           <div className="text-sm text-gray-400">
-            Levels {currentPage * levelsPerPage + 1} - {Math.min((currentPage + 1) * levelsPerPage, mockLevels.length)}
+            Levels {currentPage * levelsPerPage + 1} - {Math.min((currentPage + 1) * levelsPerPage, levels.length)}
           </div>
         </div>
 
