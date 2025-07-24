@@ -175,7 +175,10 @@ export class Shooter {
     projectile.body.setBounce(1, 0);
     projectile.body.setCollideWorldBounds(true, 0, 0, true, false);
     
-    this.scene.projectiles.add(projectile);
+    // Add to projectiles group if it exists
+    if (this.scene.projectiles) {
+      this.scene.projectiles.add(projectile);
+    }
     
     // Move next bubble to current
     this.currentBubble.destroy();
