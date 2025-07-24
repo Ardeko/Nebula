@@ -4,8 +4,9 @@ import { GameScene } from '../game/GameScene';
 import { MenuScene } from '../game/MenuScene';
 import { LevelSelectScene } from '../game/LevelSelectScene';
 import { PauseScene } from '../game/PauseScene';
+import { InfiniteScene } from '../game/InfiniteScene';
 
-const NebulaGame = ({ currentLevel, onLevelComplete, onGameOver, onPause }) => {
+const NebulaGame = ({ currentLevel, gameMode, onLevelComplete, onGameOver, onInfiniteGameOver, onPause }) => {
   const gameRef = useRef(null);
   const phaserGameRef = useRef(null);
 
@@ -24,7 +25,7 @@ const NebulaGame = ({ currentLevel, onLevelComplete, onGameOver, onPause }) => {
           debug: false
         }
       },
-      scene: [MenuScene, LevelSelectScene, GameScene, PauseScene],
+      scene: [MenuScene, LevelSelectScene, GameScene, InfiniteScene, PauseScene],
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -41,6 +42,7 @@ const NebulaGame = ({ currentLevel, onLevelComplete, onGameOver, onPause }) => {
     // Pass React callbacks to Phaser scenes
     phaserGameRef.current.events.on('level-complete', onLevelComplete);
     phaserGameRef.current.events.on('game-over', onGameOver);
+    phaserGameRef.current.events.on('infinite-game-over', onInfiniteGameOver);
     phaserGameRef.current.events.on('pause-game', onPause);
 
     return () => {
@@ -52,10 +54,12 @@ const NebulaGame = ({ currentLevel, onLevelComplete, onGameOver, onPause }) => {
   }, []);
 
   useEffect(() => {
-    if (phaserGameRef.current && currentLevel) {
+    if (phaserGameRef.current && gameMode === 'levels' && currentLevel) {
       phaserGameRef.current.scene.start('GameScene', { level: currentLevel });
+    } else if (phaserGameRef.current && gameMode === 'infinite') {
+      phaserGameRef.current.scene.start('InfiniteScene');
     }
-  }, [currentLevel]);
+  }, [currentLevel, gameMode]);
 
   return (
     <div className="game-container relative w-full h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-black overflow-hidden">
