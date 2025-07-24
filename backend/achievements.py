@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
-from .models import Achievement, PlayerAchievements, PlayerProgress
-from .database import database
+from models import Achievement, PlayerAchievements, PlayerProgress
+from database import database
 from datetime import datetime
 
 # Default achievements
