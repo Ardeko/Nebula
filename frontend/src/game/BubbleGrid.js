@@ -59,7 +59,11 @@ export class BubbleGrid {
     
     this.grid[row][col] = type;
     this.bubbleObjects[row][col] = bubble;
-    this.scene.bubbles.add(bubble);
+    
+    // Add to scene's bubbles group if it exists
+    if (this.scene.bubbles) {
+      this.scene.bubbles.add(bubble);
+    }
     
     return bubble;
   }
