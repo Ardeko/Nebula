@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import List, Optional
 import os
-from .models import PlayerProgress, InfiniteScore, PlayerAchievements, Level, LevelProgress
+from models import PlayerProgress, InfiniteScore, PlayerAchievements, Level, LevelProgress
 from datetime import datetime
 
 class Database:
