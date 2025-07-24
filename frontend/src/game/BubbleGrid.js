@@ -235,4 +235,53 @@ export class BubbleGrid {
     }
     return false;
   }
+
+  clearGrid() {
+    // Clear all bubbles
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        if (this.bubbleObjects[row][col]) {
+          this.bubbleObjects[row][col].destroy();
+        }
+        this.grid[row][col] = null;
+        this.bubbleObjects[row][col] = null;
+      }
+    }
+  }
+
+  dropNewRow() {
+    // Move all existing bubbles down by one row
+    for (let row = this.rows - 1; row >= 1; row--) {
+      for (let col = 0; col < this.cols; col++) {
+        if (this.grid[row - 1][col]) {
+          // Move bubble from row-1 to row
+          const bubble = this.bubbleObjects[row - 1][col];
+          if (bubble) {
+            const newPos = this.getWorldPosition(row, col);
+            bubble.setPosition(newPos.x, newPos.y);
+            bubble.gridRow = row;
+            bubble.gridCol = col;
+          }
+          
+          this.grid[row][col] = this.grid[row - 1][col];
+          this.bubbleObjects[row][col] = this.bubbleObjects[row - 1][col];
+        } else {
+          this.grid[row][col] = null;
+          this.bubbleObjects[row][col] = null;
+        }
+      }
+    }
+    
+    // Generate new top row
+    const colors = ['fire', 'water', 'earth', 'air', 'light', 'dark'];
+    for (let col = 0; col < this.cols; col++) {
+      if (Math.random() < 0.8) { // 80% chance of bubble in new row
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        this.createBubble(0, col, color);
+      } else {
+        this.grid[0][col] = null;
+        this.bubbleObjects[0][col] = null;
+      }
+    }
+  }
 }
