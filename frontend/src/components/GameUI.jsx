@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Progress } from './ui/progress';
-import { mockAPI } from '../data/mockData';
+import { useGameData } from '../hooks/useGameData';
 
 const GameUI = ({ 
   gameState, 
@@ -13,52 +12,35 @@ const GameUI = ({
   onShowSettings, 
   onShowAchievements 
 }) => {
-  const [playerProgress, setPlayerProgress] = useState(null);
-  const [infiniteStats, setInfiniteStats] = useState({ highScore: 0, highWave: 0 });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadPlayerProgress();
-    loadInfiniteStats();
-  }, []);
-
-  const loadPlayerProgress = async () => {
-    try {
-      const progress = await mockAPI.getPlayerProgress();
-      setPlayerProgress(progress);
-    } catch (error) {
-      console.error('Failed to load player progress:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadInfiniteStats = () => {
-    const highScore = parseInt(localStorage.getItem('nebula-infinite-high-score') || '0');
-    const highWave = parseInt(localStorage.getItem('nebula-infinite-high-wave') || '0');
-    setInfiniteStats({ highScore, highWave });
-  };
-
-  const handleLevelComplete = async (levelData) => {
-    try {
-      const updatedProgress = await mockAPI.completeLevel(
-        levelData.level, 
-        levelData.score, 
-        levelData.stars
-      );
-      setPlayerProgress(updatedProgress);
-      
-      // Check for achievements
-      await mockAPI.checkAchievements('level-complete', levelData);
-    } catch (error) {
-      console.error('Failed to save level completion:', error);
-    }
-  };
+  const {
+    playerProgress,
+    infiniteStats,
+    loading,
+    error,
+    userId
+  } = useGameData();
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-black">
-        <div className="text-white text-xl">Loading Nebula...</div>
+        <div className="text-center">
+          <div className="text-white text-xl mb-4">Loading Nebula...</div>
+          <div className="text-sm text-gray-400">Player ID: {userId}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !playerProgress) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-indigo-900 via-purple-900 to-black">
+        <div className="text-center text-white">
+          <div className="text-xl mb-4">Connection Error</div>
+          <div className="text-sm text-gray-400 mb-4">Playing in offline mode</div>
+          <Button onClick={() => window.location.reload()}>
+            Retry Connection
+          </Button>
+        </div>
       </div>
     );
   }
@@ -88,12 +70,20 @@ const GameUI = ({
             NEBULA
           </h1>
           <p className="text-xl text-blue-200 italic">Cosmic Bubble Shooter</p>
+          {error && (
+            <div className="text-xs text-yellow-400 mt-2">
+              ⚠️ Playing in offline mode
+            </div>
+          )}
         </div>
 
         {/* Player Stats */}
         <Card className="mb-6 bg-black/30 backdrop-blur-sm border-purple-500/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white">Celestial Progress</CardTitle>
+            <CardTitle className="text-white flex justify-between items-center">
+              <span>Celestial Progress</span>
+              <span className="text-xs text-gray-400">ID: {userId.slice(-8)}</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -105,7 +95,7 @@ const GameUI = ({
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-400">
-                  {playerProgress?.totalScore || 0}
+                  {playerProgress?.totalScore?.toLocaleString() || 0}
                 </div>
                 <div className="text-sm text-gray-300">Total Score</div>
               </div>
@@ -203,7 +193,7 @@ const GameUI = ({
           </CardHeader>
           <CardContent>
             <div className="grid gap-3">
-              {playerProgress?.levels?.slice(0, 4).map((level, index) => (
+              {playerProgress?.levels?.slice(0, 4).map((level) => (
                 <div key={level.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
                   <div className="flex items-center gap-3">
                     <Badge 
@@ -225,7 +215,7 @@ const GameUI = ({
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium text-white">
-                      {level.bestScore.toLocaleString()}
+                      {level.bestScore?.toLocaleString() || 0}
                     </div>
                     <div className="text-xs text-gray-400">Best Score</div>
                   </div>
